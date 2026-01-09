@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-eks
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-eks
+  template:
+    metadata:
+      labels:
+        app: hello-eks
+    spec:
+      containers:
+      - name: hello-eks
+        image: 968726368728.dkr.ecr.eu-west-2.amazonaws.com/hello-eks:1.1
+        ports:
+        - containerPort: 80

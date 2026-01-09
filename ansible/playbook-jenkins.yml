@@ -1,0 +1,76 @@
+- hosts: jenkins
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install base packages
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+          - git
+          - unzip
+          - openjdk-17-jre
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Enable Docker
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add Jenkins apt key
+      apt_key:
+        url: https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+        state: present
+
+    - name: Add Jenkins repository
+      apt_repository:
+        repo: deb https://pkg.jenkins.io/debian-stable binary/
+        state: present
+        filename: jenkins
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+        update_cache: yes
+
+    - name: Start Jenkins
+      service:
+        name: jenkins
+        state: started
+        enabled: yes
+
+    - name: Add jenkins user to docker group
+      user:
+        name: jenkins
+        groups: docker
+        append: yes
+
+    - name: Install AWS CLI v2
+      shell: |
+        set -e
+        curl -sS "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip"
+        rm -rf /tmp/aws
+        unzip -o /tmp/awscliv2.zip -d /tmp >/dev/null
+        /tmp/aws/install || true
+      args:
+        creates: /usr/local/bin/aws
+
+    - name: Install kubectl
+      shell: |
+        set -e
+        curl -sSL -o /usr/local/bin/kubectl https://dl.k8s.io/release/v1.32.0/bin/linux/amd64/kubectl
+        chmod +x /usr/local/bin/kubectl
+      args:
+        creates: /usr/local/bin/kubectl
